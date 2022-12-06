@@ -1,0 +1,76 @@
+plugins {
+    id 'java-library'
+    id 'io.qameta.allure' version '2.9.6'
+}
+
+repositories {
+    mavenCentral()
+}
+
+def allureVersion = "2.17.3",
+    selenideVersion = "6.9.0",
+    junitVersion = "5.8.2"
+
+
+allure {
+    report {
+        version.set(allureVersion)
+    }
+    adapter {
+        aspectjWeaver.set(true)
+        frameworks {
+            junit5 {
+                adapterVersion.set(allureVersion)
+            }
+        }
+    }
+}
+
+dependencies {
+    testImplementation(
+            "org.aspectj:aspectjweaver:1.9.6",
+            "com.codeborne:selenide:$selenideVersion",
+            "io.qameta.allure:allure-selenide:$allureVersion",
+            "org.aeonbits.owner:owner:1.0.12",
+            "org.assertj:assertj-core:3.19.0",
+            "org.slf4j:slf4j-simple:2.0.3",
+            'com.github.javafaker:javafaker:1.0.2',
+            "org.junit.jupiter:junit-jupiter:$junitVersion",
+            "org.seleniumhq.selenium:selenium-java:4.6.0",
+            "io.github.bonigarcia:webdrivermanager:5.3.1",
+            "io.rest-assured:rest-assured:5.3.0")
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+tasks.withType(Test) {
+    systemProperties(System.getProperties())
+    useJUnitPlatform()
+
+    if (System.getProperty("threads") != null) {
+        systemProperties += [
+                'junit.jupiter.execution.parallel.enabled'                 : true,
+                'junit.jupiter.execution.parallel.mode.default'            : 'concurrent',
+                'junit.jupiter.execution.parallel.mode.classes.default'    : 'concurrent',
+                'junit.jupiter.execution.parallel.config.strategy'         : 'fixed',
+                'junit.jupiter.execution.parallel.config.fixed.parallelism': System.getProperty("threads").toInteger()
+        ]
+    }
+
+    testLogging {
+        lifecycle {
+//            events "started", "failed"
+            events "started", "skipped", "failed", "standard_error", "standard_out"
+            exceptionFormat "short"
+        }
+    }
+
+    test {
+        useJUnitPlatform()
+        systemProperties(System.getProperties())
+    }
+}
