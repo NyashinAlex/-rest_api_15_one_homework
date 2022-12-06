@@ -68,7 +68,7 @@ public class ReqresInTests {
     }
 
     @Test
-    void updateUserPutUnsuccessful() {
+    void updateUserPutSuccessful() {
         String user = "{\"name\": \"" + name + "\",\"job\": \"" + job + "\"}";
 
         given()
@@ -86,7 +86,7 @@ public class ReqresInTests {
     }
 
     @Test
-    void updateUserPatchUnsuccessful() {
+    void updateUserPatchSuccessful() {
         String user = "{\"name\": \"" + name + "\",\"job\": \"" + job + "\"}";
 
         given()
