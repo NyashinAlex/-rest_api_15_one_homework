@@ -1,20 +1,20 @@
 package tests;
 
-import io.qameta.allure.restassured.AllureRestAssured;
 import com.github.javafaker.Faker;
 import models.lombok.LoginBodyModel;
 import models.lombok.LoginResponseModel;
 import models.pojo.UserBodyModel;
 import models.pojo.UserResponseModel;
+import models.pojo.UserUpdateResponseModel;
 import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
 
-import static helpers.CustomApiListener.withCustomTemplates;
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.hamcrest.Matchers.is;
+import static specs.EmailSpec.*;
+import static specs.UserSpec.*;
 
 public class ReqresInTests {
 
@@ -31,16 +31,12 @@ public class ReqresInTests {
         body.setJob(job);
 
         UserResponseModel responseModel = given()
-                .filter(withCustomTemplates())
-                .log().all()
-                .contentType(JSON)
+                .spec(userRequestSpec)
                 .body(body)
                 .when()
-                .post("https://reqres.in/api/users")
+                .post()
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(201)
+                .spec(userResponseSpec)
                 .extract().as(UserResponseModel.class);
 
         assertThat(responseModel.getName()).isEqualTo(name);
@@ -53,16 +49,12 @@ public class ReqresInTests {
         body.setEmail(email);
 
         LoginResponseModel responseModel = given()
-                .filter(withCustomTemplates())
-                .log().uri()
-                .contentType(JSON)
+                .spec(emailLoginRequestSpec)
                 .body(body)
                 .when()
-                .post("https://reqres.in/api/login")
+                .post()
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(400)
+                .spec(emailResponseSpec)
                 .extract().as(LoginResponseModel.class);
 
         assertThat(responseModel.getError()).isEqualTo("Missing password");
@@ -70,54 +62,56 @@ public class ReqresInTests {
 
     @Test
     void registerUnsuccessful() {
-        String data = "{\"email\": \"" + email + "\"}";
+        LoginBodyModel body = new LoginBodyModel();
+        body.setEmail(email);
 
-        given()
-                .log().uri()
-                .contentType(JSON)
-                .body(data)
+        LoginResponseModel responseModel = given()
+                .spec(emailRegisterRequestSpec)
+                .body(body)
                 .when()
-                .post("https://reqres.in/api/register")
+                .post()
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(400)
-                .body("error", is("Missing password"));
+                .spec(emailResponseSpec)
+                .extract().as(LoginResponseModel.class);
+
+        assertThat(responseModel.getError()).isEqualTo("Missing password");
     }
 
     @Test
     void updateUserPutSuccessful() {
-        String user = "{\"name\": \"" + name + "\",\"job\": \"" + job + "\"}";
+        UserBodyModel body = new UserBodyModel();
+        body.setName(name);
+        body.setJob(job);
 
-        given()
-                .log().uri()
-                .contentType(JSON)
-                .body(user)
+        UserUpdateResponseModel responseModel = given()
+                .spec(userUpdateRequestSpec)
+                .body(body)
                 .when()
                 .put("https://reqres.in/api/users/2")
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(200)
-                .body("name", is(name))
-                .body("job", is(job));
+                .spec(userUpdateResponseSpec)
+                .extract().as(UserUpdateResponseModel.class);
+
+        assertThat(responseModel.getName()).isEqualTo(name);
+        assertThat(responseModel.getJob()).isEqualTo(job);
     }
 
     @Test
     void updateUserPatchSuccessful() {
-        String user = "{\"name\": \"" + name + "\",\"job\": \"" + job + "\"}";
+        UserBodyModel body = new UserBodyModel();
+        body.setName(name);
+        body.setJob(job);
 
-        given()
-                .log().uri()
-                .contentType(JSON)
-                .body(user)
+        UserUpdateResponseModel responseModel = given()
+                .spec(userUpdateRequestSpec)
+                .body(body)
                 .when()
-                .patch("https://reqres.in/api/users/2")
+                .patch()
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(200)
-                .body("name", is(name))
-                .body("job", is(job));
+                .spec(userUpdateResponseSpec)
+                .extract().as(UserUpdateResponseModel.class);
+
+        assertThat(responseModel.getName()).isEqualTo(name);
+        assertThat(responseModel.getJob()).isEqualTo(job);;
     }
 }
